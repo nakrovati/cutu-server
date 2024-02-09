@@ -9,6 +9,10 @@
     "check": "biome check --apply ./src"
   },
   "dependencies": {
+    "@elysiajs/html": "^0.8.0",
+    "@elysiajs/static": "^0.8.1",
+    "@libsql/client": "^0.4.3",
+    "drizzle-orm": "^0.29.3",
     "elysia": "^0.8.16",
     "valibot": "^0.28.1"
   },

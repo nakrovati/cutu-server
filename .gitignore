@@ -16,6 +16,7 @@
 .vscode
 .zed
 *.pem
+local.db
 
 # local env files
 .env.local
