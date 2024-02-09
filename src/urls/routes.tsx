@@ -14,16 +14,18 @@ export const urlsRouter = new Elysia()
   .get(
     "/:shortCode",
     async ({ set, params: { shortCode }, html }) => {
-      if (shortCode.lastIndexOf("+") !== -1) {
+      if (shortCode.includes("+")) {
         set.redirect = `${Bun.env.FRONTEND_URL}/${shortCode}`;
         return;
       }
+
+      shortCode.replace("+", "");
 
       try {
         const shortUrlRecord = await db
           .select({ originalUrl: shortUrls.originalUrl })
           .from(shortUrls)
-          .where(eq(shortUrls.shortCode, shortCode.slice(0, -1)))
+          .where(eq(shortUrls.shortCode, shortCode))
           .limit(1);
 
         if (shortUrlRecord.length === 0) return html(<Page404 />);
