@@ -10,7 +10,9 @@ const app = new Elysia()
   .use(html())
   .use(staticPlugin())
   .use(urlsRouter)
-  .get("/", ({ set }) => set.redirect(FRONTEND_URL))
+  .get("/", ({ set }) => {
+    set.redirect = FRONTEND_URL;
+  })
   .listen(8080);
 
 console.log(
