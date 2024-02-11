@@ -1,5 +1,5 @@
 import { db } from "@/config/db/index.js";
-import { type NewShortUrl, shortenedUrls } from "@/config/db/schema.js";
+import { type NewShortenedUrl, shortenedUrls } from "@/config/db/schema.js";
 import { Page404 } from "@/templates/404.js";
 import {
   generateShortCode,
@@ -51,14 +51,14 @@ export const urlsRouter = new Elysia()
           const shortCode = generateShortCode();
           const createdAt = new Date().toISOString();
 
-          const newshortenedUrl: NewShortUrl = {
+          const newShortenedUrl: NewShortenedUrl = {
             shortCode,
             originalUrl,
             createdAt,
           };
 
           try {
-            await db.insert(shortenedUrls).values(newshortenedUrl);
+            await db.insert(shortenedUrls).values(newShortenedUrl);
 
             const shortUrl = `${BACKEND_URL}/${shortCode}`;
 

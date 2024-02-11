@@ -7,4 +7,4 @@ export const shortenedUrls = sqliteTable("shortened_urls", {
   createdAt: text("created_at").notNull(),
 });
 
-export type NewShortUrl = typeof shortenedUrls.$inferInsert;
+export type NewShortenedUrl = typeof shortenedUrls.$inferInsert;
