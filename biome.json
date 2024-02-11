@@ -4,6 +4,12 @@
     "enabled": true
   },
   "formatter": {
-    "enabled": false
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
   }
 }
