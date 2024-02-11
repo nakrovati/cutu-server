@@ -1,4 +1,4 @@
-const { FRONTEND_URL } = process.env;
+const { FRONTEND_URL } = Bun.env;
 
 export const Page404 = () => {
   return (

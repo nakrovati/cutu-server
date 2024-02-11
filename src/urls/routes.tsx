@@ -9,13 +9,15 @@ import { html } from "@elysiajs/html";
 import { eq } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 
+const { BACKEND_URL, FRONTEND_URL } = Bun.env;
+
 export const urlsRouter = new Elysia()
   .use(html())
   .get(
     "/:shortCode",
     async ({ set, params: { shortCode }, html }) => {
       if (shortCode.includes("+")) {
-        set.redirect = `${Bun.env.FRONTEND_URL}/${shortCode}`;
+        set.redirect = `${FRONTEND_URL}/${shortCode}`;
         return;
       }
 
@@ -58,7 +60,7 @@ export const urlsRouter = new Elysia()
           try {
             await db.insert(shortenedUrls).values(newshortenedUrl);
 
-            const shortUrl = `${Bun.env.BACKEND_URL}/${shortCode}`;
+            const shortUrl = `${BACKEND_URL}/${shortCode}`;
 
             const response = {
               shortUrl,
@@ -91,7 +93,7 @@ export const urlsRouter = new Elysia()
             if (shortenedUrl.length === 0)
               throw new Error("Short URL not found");
 
-            const shortUrl = `${Bun.env.BACKEND_URL}/${shortCode}`;
+            const shortUrl = `${BACKEND_URL}/${shortCode}`;
 
             const response = {
               shortUrl,
