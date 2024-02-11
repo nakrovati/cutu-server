@@ -1,8 +1,8 @@
+import "@/config/env";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import { urlsRouter } from "./urls/routes.js";
-import "@/config/env";
 
 const { FRONTEND_URL } = Bun.env;
 
@@ -16,5 +16,5 @@ const app = new Elysia()
   .listen(8080);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
 );

@@ -1,4 +1,4 @@
-import { string, object, Output, parse } from "valibot";
+import { Output, object, parse, string } from "valibot";
 
 const EnvSchema = object({
   BACKEND_URL: string("BACKEND_URL must be set"),

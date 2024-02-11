@@ -41,7 +41,7 @@ export const urlsRouter = new Elysia()
       beforeHandle: ({ params: { shortCode }, html }) => {
         if (!validateShortCode(shortCode, true)) return html(<Page404 />);
       },
-    }
+    },
   )
   .group("/urls", (app) =>
     app
@@ -74,7 +74,7 @@ export const urlsRouter = new Elysia()
             throw new Error("Something went wrong");
           }
         },
-        { body: t.Object({ originalUrl: t.String() }) }
+        { body: t.Object({ originalUrl: t.String() }) },
       )
       .get(
         "/:shortCode",
@@ -113,6 +113,6 @@ export const urlsRouter = new Elysia()
               throw new Error("Invalid short code");
             }
           },
-        }
-      )
+        },
+      ),
   );
