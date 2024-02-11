@@ -1,5 +1,5 @@
 import { db } from "@/config/db/index.js";
-import { type NewShortUrl, shortUrls } from "@/config/db/schema.js";
+import { type NewShortUrl, shortenedUrls } from "@/config/db/schema.js";
 import { Page404 } from "@/templates/404.js";
 import {
   generateShortCode,
@@ -22,15 +22,15 @@ export const urlsRouter = new Elysia()
       shortCode.replace("+", "");
 
       try {
-        const shortUrlRecord = await db
-          .select({ originalUrl: shortUrls.originalUrl })
-          .from(shortUrls)
-          .where(eq(shortUrls.shortCode, shortCode))
+        const shortenedUrl = await db
+          .select({ originalUrl: shortenedUrls.originalUrl })
+          .from(shortenedUrls)
+          .where(eq(shortenedUrls.shortCode, shortCode))
           .limit(1);
 
-        if (shortUrlRecord.length === 0) return html(<Page404 />);
+        if (shortenedUrl.length === 0) return html(<Page404 />);
 
-        set.redirect = shortUrlRecord[0].originalUrl;
+        set.redirect = shortenedUrl[0].originalUrl;
       } catch (error) {
         throw new Error("Something went wrong");
       }
@@ -49,14 +49,14 @@ export const urlsRouter = new Elysia()
           const shortCode = generateShortCode();
           const createdAt = new Date().toISOString();
 
-          const newShortUrlRecord: NewShortUrl = {
+          const newshortenedUrl: NewShortUrl = {
             shortCode,
             originalUrl,
             createdAt,
           };
 
           try {
-            await db.insert(shortUrls).values(newShortUrlRecord);
+            await db.insert(shortenedUrls).values(newshortenedUrl);
 
             const shortUrl = `${Bun.env.BACKEND_URL}/${shortCode}`;
 
@@ -78,25 +78,25 @@ export const urlsRouter = new Elysia()
         "/:shortCode",
         async ({ params: { shortCode } }) => {
           try {
-            const shortUrlRecord = await db
+            const shortenedUrl = await db
               .select({
-                shortCode: shortUrls.shortCode,
-                originalUrl: shortUrls.originalUrl,
-                createdAt: shortUrls.createdAt,
+                shortCode: shortenedUrls.shortCode,
+                originalUrl: shortenedUrls.originalUrl,
+                createdAt: shortenedUrls.createdAt,
               })
-              .from(shortUrls)
-              .where(eq(shortUrls.shortCode, shortCode))
+              .from(shortenedUrls)
+              .where(eq(shortenedUrls.shortCode, shortCode))
               .limit(1);
 
-            if (shortUrlRecord.length === 0)
+            if (shortenedUrl.length === 0)
               throw new Error("Short URL not found");
 
             const shortUrl = `${Bun.env.BACKEND_URL}/${shortCode}`;
 
             const response = {
               shortUrl,
-              originalUrl: shortUrlRecord[0].originalUrl,
-              createdAt: shortUrlRecord[0].createdAt,
+              originalUrl: shortenedUrl[0].originalUrl,
+              createdAt: shortenedUrl[0].createdAt,
             };
 
             return response;
