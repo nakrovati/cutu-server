@@ -3,7 +3,7 @@ import { type NewShortenedUrl, shortenedUrls } from "@/config/db/schema.js";
 import { Page404 } from "@/templates/404.js";
 import {
   generateShortCode,
-  validateShortCode,
+  isValidShortCode,
 } from "@/urls/utils/createShortCode.js";
 import { html } from "@elysiajs/html";
 import { eq, sql } from "drizzle-orm";
@@ -11,14 +11,14 @@ import { Elysia, t } from "elysia";
 
 const { BACKEND_URL, FRONTEND_URL } = Bun.env;
 
-const preparedFindOriginUrlByShortCode = db
+const findOriginUrlByShortCode = db
   .select({ originalUrl: shortenedUrls.originalUrl })
   .from(shortenedUrls)
   .where(eq(shortenedUrls.shortCode, sql.placeholder("shortCode")))
   .limit(1)
   .prepare();
 
-const preparedFindShortenedUrlByShortCode = db
+const findShortenedUrlByShortCode = db
   .select({
     shortCode: shortenedUrls.shortCode,
     originalUrl: shortenedUrls.originalUrl,
@@ -29,7 +29,7 @@ const preparedFindShortenedUrlByShortCode = db
   .limit(1)
   .prepare();
 
-const preparedInsertShortenedUrl = db
+const insertShortenedUrl = db
   .insert(shortenedUrls)
   .values({
     shortCode: sql.placeholder("shortCode"),
@@ -48,10 +48,10 @@ export const urlsRouter = new Elysia()
         return;
       }
 
-      shortCode.replace("+", "");
+      shortCode = shortCode.replace("+", "");
 
       try {
-        const shortenedUrl = await preparedFindOriginUrlByShortCode.execute({
+        const shortenedUrl = await findOriginUrlByShortCode.execute({
           shortCode,
         });
 
@@ -64,7 +64,7 @@ export const urlsRouter = new Elysia()
     },
     {
       beforeHandle: ({ params: { shortCode }, html }) => {
-        if (!validateShortCode(shortCode, true)) return html(<Page404 />);
+        if (!isValidShortCode(shortCode, true)) return html(<Page404 />);
       },
     },
   )
@@ -83,7 +83,7 @@ export const urlsRouter = new Elysia()
           };
 
           try {
-            await preparedInsertShortenedUrl.execute(newShortenedUrl);
+            await insertShortenedUrl.execute(newShortenedUrl);
 
             const shortUrl = `${BACKEND_URL}/${shortCode}`;
 
@@ -105,8 +105,9 @@ export const urlsRouter = new Elysia()
         "/:shortCode",
         async ({ params: { shortCode } }) => {
           try {
-            const shortenedUrl =
-              await preparedFindShortenedUrlByShortCode.execute({ shortCode });
+            const shortenedUrl = await findShortenedUrlByShortCode.execute({
+              shortCode,
+            });
 
             if (shortenedUrl.length === 0)
               throw new Error("Short URL not found");
@@ -126,7 +127,7 @@ export const urlsRouter = new Elysia()
         },
         {
           beforeHandle: ({ set, params: { shortCode } }) => {
-            if (!validateShortCode(shortCode)) {
+            if (!isValidShortCode(shortCode)) {
               set.status = 404;
               throw new Error("Invalid short code");
             }

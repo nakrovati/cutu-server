@@ -9,10 +9,7 @@ export function generateShortCode() {
   return result;
 }
 
-export const validateShortCode = (
-  shortUrl: string,
-  enablePlusSigns = false,
-) => {
+export const isValidShortCode = (shortUrl: string, enablePlusSigns = false) => {
   const shortUrlRegexp = /^[a-zA-Z0-9]{7}$/;
   const shortUrlRegexpWithPlus = /^[a-zA-Z0-9]{7}[+]?$/;
 
