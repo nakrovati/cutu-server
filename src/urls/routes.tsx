@@ -6,10 +6,37 @@ import {
   validateShortCode,
 } from "@/urls/utils/createShortCode.js";
 import { html } from "@elysiajs/html";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 
 const { BACKEND_URL, FRONTEND_URL } = Bun.env;
+
+const preparedFindOriginUrlByShortCode = db
+  .select({ originalUrl: shortenedUrls.originalUrl })
+  .from(shortenedUrls)
+  .where(eq(shortenedUrls.shortCode, sql.placeholder("shortCode")))
+  .limit(1)
+  .prepare();
+
+const preparedFindShortenedUrlByShortCode = db
+  .select({
+    shortCode: shortenedUrls.shortCode,
+    originalUrl: shortenedUrls.originalUrl,
+    createdAt: shortenedUrls.createdAt,
+  })
+  .from(shortenedUrls)
+  .where(eq(shortenedUrls.shortCode, sql.placeholder("shortCode")))
+  .limit(1)
+  .prepare();
+
+const preparedInsertShortenedUrl = db
+  .insert(shortenedUrls)
+  .values({
+    shortCode: sql.placeholder("shortCode"),
+    originalUrl: sql.placeholder("originalUrl"),
+    createdAt: sql.placeholder("createdAt"),
+  })
+  .prepare();
 
 export const urlsRouter = new Elysia()
   .use(html())
@@ -24,11 +51,9 @@ export const urlsRouter = new Elysia()
       shortCode.replace("+", "");
 
       try {
-        const shortenedUrl = await db
-          .select({ originalUrl: shortenedUrls.originalUrl })
-          .from(shortenedUrls)
-          .where(eq(shortenedUrls.shortCode, shortCode))
-          .limit(1);
+        const shortenedUrl = await preparedFindOriginUrlByShortCode.execute({
+          shortCode,
+        });
 
         if (shortenedUrl.length === 0) return html(<Page404 />);
 
@@ -58,7 +83,7 @@ export const urlsRouter = new Elysia()
           };
 
           try {
-            await db.insert(shortenedUrls).values(newShortenedUrl);
+            await preparedInsertShortenedUrl.execute(newShortenedUrl);
 
             const shortUrl = `${BACKEND_URL}/${shortCode}`;
 
@@ -80,15 +105,8 @@ export const urlsRouter = new Elysia()
         "/:shortCode",
         async ({ params: { shortCode } }) => {
           try {
-            const shortenedUrl = await db
-              .select({
-                shortCode: shortenedUrls.shortCode,
-                originalUrl: shortenedUrls.originalUrl,
-                createdAt: shortenedUrls.createdAt,
-              })
-              .from(shortenedUrls)
-              .where(eq(shortenedUrls.shortCode, shortCode))
-              .limit(1);
+            const shortenedUrl =
+              await preparedFindShortenedUrlByShortCode.execute({ shortCode });
 
             if (shortenedUrl.length === 0)
               throw new Error("Short URL not found");
