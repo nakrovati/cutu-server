@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.5.3",
+    "@flydotio/dockerfile": "^0.5.2",
     "@types/bun": "^1.0.5",
     "lefthook": "^1.6.1",
     "prettier": "^3.2.5"
