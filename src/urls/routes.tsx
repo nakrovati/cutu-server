@@ -1,42 +1,14 @@
-import { db } from "@/config/db/index.js";
-import { type NewShortenedUrl, shortenedUrls } from "@/config/db/schema.js";
 import { Page404 } from "@/templates/404.js";
-import {
-  generateShortCode,
-  isValidShortCode,
-} from "@/urls/utils/createShortCode.js";
+import { isValidShortCode } from "@/urls/utils/createShortCode.js";
 import { html } from "@elysiajs/html";
-import { eq, sql } from "drizzle-orm";
 import { Elysia, t } from "elysia";
+import {
+  createShortenedUrl,
+  getOriginalUrl,
+  getShortenedUrl,
+} from "./services.js";
 
-const { BACKEND_URL, FRONTEND_URL } = Bun.env;
-
-const findOriginUrlByShortCode = db
-  .select({ originalUrl: shortenedUrls.originalUrl })
-  .from(shortenedUrls)
-  .where(eq(shortenedUrls.shortCode, sql.placeholder("shortCode")))
-  .limit(1)
-  .prepare();
-
-const findShortenedUrlByShortCode = db
-  .select({
-    shortCode: shortenedUrls.shortCode,
-    originalUrl: shortenedUrls.originalUrl,
-    createdAt: shortenedUrls.createdAt,
-  })
-  .from(shortenedUrls)
-  .where(eq(shortenedUrls.shortCode, sql.placeholder("shortCode")))
-  .limit(1)
-  .prepare();
-
-const insertShortenedUrl = db
-  .insert(shortenedUrls)
-  .values({
-    shortCode: sql.placeholder("shortCode"),
-    originalUrl: sql.placeholder("originalUrl"),
-    createdAt: sql.placeholder("createdAt"),
-  })
-  .prepare();
+const { FRONTEND_URL } = Bun.env;
 
 export const urlsRouter = new Elysia()
   .use(html())
@@ -51,13 +23,11 @@ export const urlsRouter = new Elysia()
       shortCode = shortCode.replace("+", "");
 
       try {
-        const shortenedUrl = await findOriginUrlByShortCode.execute({
-          shortCode,
-        });
+        const originalUrl = await getOriginalUrl(shortCode);
 
-        if (shortenedUrl.length === 0) return html(<Page404 />);
+        if (!originalUrl) return html(<Page404 />);
 
-        set.redirect = shortenedUrl[0].originalUrl;
+        set.redirect = originalUrl;
       } catch (error) {
         throw new Error("Something went wrong");
       }
@@ -70,57 +40,18 @@ export const urlsRouter = new Elysia()
   )
   .group("/urls", (app) =>
     app
-      .post(
-        "/",
-        async ({ body: { originalUrl } }) => {
-          const shortCode = generateShortCode();
-          const createdAt = new Date().toISOString();
-
-          const newShortenedUrl: NewShortenedUrl = {
-            shortCode,
-            originalUrl,
-            createdAt,
-          };
-
-          try {
-            await insertShortenedUrl.execute(newShortenedUrl);
-
-            const shortUrl = `${BACKEND_URL}/${shortCode}`;
-
-            const response = {
-              shortUrl,
-              originalUrl,
-              createdAt,
-            };
-
-            return response;
-          } catch (error) {
-            console.error(error);
-            throw new Error("Something went wrong");
-          }
-        },
-        { body: t.Object({ originalUrl: t.String() }) },
-      )
       .get(
         "/:shortCode",
-        async ({ params: { shortCode } }) => {
+        async ({ set, params: { shortCode } }) => {
           try {
-            const shortenedUrl = await findShortenedUrlByShortCode.execute({
-              shortCode,
-            });
+            const shortenedUrl = await getShortenedUrl(shortCode);
 
-            if (shortenedUrl.length === 0)
-              throw new Error("Short URL not found");
+            if (!shortenedUrl) {
+              set.status = 404;
+              return new Error("Shortened url not found");
+            }
 
-            const shortUrl = `${BACKEND_URL}/${shortCode}`;
-
-            const response = {
-              shortUrl,
-              originalUrl: shortenedUrl[0].originalUrl,
-              createdAt: shortenedUrl[0].createdAt,
-            };
-
-            return response;
+            return shortenedUrl;
           } catch (error) {
             throw new Error("Something went wrong");
           }
@@ -128,10 +59,21 @@ export const urlsRouter = new Elysia()
         {
           beforeHandle: ({ set, params: { shortCode } }) => {
             if (!isValidShortCode(shortCode)) {
-              set.status = 404;
               throw new Error("Invalid short code");
             }
           },
         },
+      )
+      .post(
+        "/",
+        async ({ body: { originalUrl } }) => {
+          try {
+            const response = await createShortenedUrl(originalUrl);
+            return response;
+          } catch (error) {
+            throw new Error("Something went wrong");
+          }
+        },
+        { body: t.Object({ originalUrl: t.String() }) },
       ),
   );
