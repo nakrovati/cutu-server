@@ -10,6 +10,7 @@
     "prepare": "lefthook install || exit 0"
   },
   "dependencies": {
+    "@elysiajs/cors": "^0.8.0",
     "@elysiajs/html": "^0.8.0",
     "@elysiajs/static": "^0.8.1",
     "@libsql/client": "^0.4.3",
