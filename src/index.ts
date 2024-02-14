@@ -5,7 +5,7 @@ import { staticPlugin } from "@elysiajs/static";
 import { Elysia } from "elysia";
 import { urlsRouter } from "./urls/routes.js";
 
-const { FRONTEND_URL } = Bun.env;
+const { FRONTEND_URL, PORT } = Bun.env;
 
 const origin = new URL(FRONTEND_URL).host;
 
@@ -17,7 +17,7 @@ const app = new Elysia()
   .get("/", ({ set }) => {
     set.redirect = FRONTEND_URL;
   })
-  .listen(8080);
+  .listen(PORT || 3000);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
