@@ -16,6 +16,7 @@
     "@libsql/client": "^0.4.3",
     "drizzle-orm": "^0.29.3",
     "elysia": "^0.8.16",
+    "lru-cache": "^10.2.0",
     "valibot": "^0.28.1"
   },
   "devDependencies": {
