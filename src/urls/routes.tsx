@@ -14,7 +14,7 @@ export const urlsRouter = new Elysia()
   .use(html())
   .get(
     "/:shortCode",
-    async ({ set, params: { shortCode }, html }) => {
+    async ({ set, params: { shortCode } }) => {
       if (shortCode.includes("+")) {
         set.redirect = `${FRONTEND_URL}/${shortCode}`;
         return;
@@ -25,7 +25,7 @@ export const urlsRouter = new Elysia()
       try {
         const originalUrl = await getOriginalUrl(shortCode);
 
-        if (!originalUrl) return html(<Page404 />);
+        if (!originalUrl) return <Page404 />;
 
         set.redirect = originalUrl;
       } catch (error) {
@@ -33,8 +33,8 @@ export const urlsRouter = new Elysia()
       }
     },
     {
-      beforeHandle: ({ params: { shortCode }, html }) => {
-        if (!isValidShortCode(shortCode, true)) return html(<Page404 />);
+      beforeHandle: ({ params: { shortCode } }) => {
+        if (!isValidShortCode(shortCode, true)) return <Page404 />;
       },
     },
   )
